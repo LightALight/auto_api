@@ -1,0 +1,117 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api",
+    "version": "last",
+    "description": "api文档"
+  },
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "操作API相关接口"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/operate/confirm": {
+      "post": {
+        "tags": [
+          "操作API相关接口"
+        ],
+        "summary": "确认",
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "root",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": [
+                "body"
+              ],
+              "properties": {
+                "body": {
+                  "type": "object",
+                  "properties": {
+                    "requestNo": {
+                      "type": "string",
+                      "description": "请求号"
+                    },
+                    "validateCode": {
+                      "type": "string",
+                      "description": "短信验证码"
+                    }
+                  },
+                  "description": "确认对象",
+                  "$$ref": "#/definitions/确认对象"
+                }
+              },
+              "$$ref": "#/definitions/WsHeadBodyVoHeadVo确认对象"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "required": [
+                "cache",
+                "code",
+                "data",
+                "msg",
+                "succeed"
+              ],
+              "properties": {
+                "succeed": {
+                  "type": "boolean",
+                  "position": 1,
+                  "description": "请求是否成功"
+                },
+                "code": {
+                  "type": "string",
+                  "position": 2,
+                  "description": "响应状态码"
+                },
+                "msg": {
+                  "type": "string",
+                  "position": 3,
+                  "description": "响应状态描述"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "requestNo": {
+                      "type": "string",
+                      "description": "请求号"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "format": "int32",
+                      "description": "状态  0~待处理 1~鉴权请求待发送 2~已发送鉴权请求 3~已发短信验证码 4~鉴权成功 5~鉴权失败"
+                    },
+                    "Account": {
+                      "type": "string",
+                      "description": "账户编号"
+                    }
+                  },
+                  "description": "确认响应对象",
+                  "$$ref": "#/definitions/确认响应对象"
+                },
+                "cache": {
+                  "type": "string",
+                  "position": 5,
+                  "description": "缓存是否命中"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
