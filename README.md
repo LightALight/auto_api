@@ -1,6 +1,6 @@
 ## 简介
 
-- 通过swagger json(目前只适合Yaapi导出) 自动生成Api方法和冒烟测试用例
+- 通过swagger json(目前只适合Yapi导出) 自动生成Api方法和冒烟测试用例
 - pytest 管理运行测试用例
 - allure 生成测试报告
 
@@ -23,7 +23,7 @@
 ## 生成代码
 
 ```bash
-# 读取 docs 的api文档,写入common的api和testcases里面test_smoke生成冒烟用例
+# 读取 docs 的api文档,写入common的api 和 testcases里面test_smoke
 python3 code_gen.py
 ```
 
