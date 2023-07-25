@@ -139,7 +139,7 @@ class SwaggerToCode():
             code.append(
                 f"    headers = dict()  # TODO: Update with actual headers URL")
             code.append(
-                f"    validator = ResponseValidator(os.path.join(get_file_dir(__file__), 'account_ws.json'))")
+                f"    validator = ResponseValidator(os.path.join(get_file_dir(__file__), '{camel_to_snake(class_name)}.json'))")
 
             # 开始生成冒烟代码
             smoke_code = []
