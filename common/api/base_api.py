@@ -8,10 +8,11 @@
 @Description :
 -------------------------------------------------
 """
+import os.path
 import traceback
 import requests
 from common.api.response_validator import ResponseValidator
-from common.my_log import logger
+from common.my_log import my_log
 
 
 class BaseAPI:
@@ -38,22 +39,22 @@ class BaseAPI:
             try:
                 content = res.json()
             except Exception as e:
-                logger.error(e)
+                my_log.error(e)
                 content = res.text
                 check_response = False
         except requests.RequestException as e:
-            logger.info('%s%s' % ('RequestException url: ', url))
-            logger.info(e)
+            my_log.info('%s%s' % ('RequestException url: ', url))
+            my_log.info(e)
         except Exception as e:
-            logger.info('%s%s' % ('Exception url: ', url))
+            my_log.info('%s%s' % ('Exception url: ', url))
             traceback.print_exc()
-            logger.info(e)
-        logger.info(f"请求URL: {url}")
-        logger.info(f"请求Headers: {kwargs.get('headers', {})}")
-        logger.info(f"请求Body: {kwargs.get('json', {})}")
-        logger.info(f"响应码: {status_code}")
-        logger.info(f"响应体: {content}")
-        if check_response and self.api_def_file:
+            my_log.info(e)
+        my_log.info(f"请求URL: {url}")
+        my_log.info(f"请求Headers: {kwargs.get('headers', {})}")
+        my_log.info(f"请求Body: {kwargs.get('json', {})}")
+        my_log.info(f"响应码: {status_code}")
+        my_log.info(f"响应体: {content}")
+        if check_response and os.path.exists(self.api_def_file):
             result, message = ResponseValidator(
                 self.api_def_file).validate_response(
                 url, status_code, content)

@@ -13,7 +13,7 @@ import os.path
 from common.file_func import find_files_recursive, create_file_dir, \
     get_file_name, write_to_file_with_suffix, write_file_json
 from common.str_func import camel_to_snake
-from config.config import code_gen_api_dir, code_gen_raw_api_dir, \
+from config.my_config import code_gen_api_dir, code_gen_raw_api_dir, \
     code_gen_api_smoke_dir
 from swagger_to_code import SwaggerToCode
 
@@ -49,7 +49,8 @@ class CodeGen():
                         api_file_dir,
                         f"{camel_to_snake(file_name)}.py"),
                     api_def)
-                smoke_code = smoke_code.replace("CLASSNAME", f"{camel_to_snake(file_dir_name)}")
+                smoke_code = smoke_code.replace(
+                    "CLASSNAME", f"{camel_to_snake(file_dir_name)}")
                 write_to_file_with_suffix(
                     os.path.join(
                         smoke_dir,

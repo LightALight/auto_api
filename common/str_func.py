@@ -10,12 +10,11 @@
 """
 
 
-import re
-
-
 def camel_to_snake(name):
     # 一个简单的camel到snake的转换函数
-    return ''.join(['_' + i.lower() if i.isupper() else i for i in name]).lstrip('_')
+    return ''.join(['_' + i.lower() if i.isupper()
+                    else i for i in name]).lstrip('_')
+
 
 def type_java_to_python(j_type):
     # 假设的Java到Python类型转换函数

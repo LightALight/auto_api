@@ -18,9 +18,23 @@ class ResponseValidator:
         self.validation_map = read_file_json(config_file)
 
     def validate_response(self, url, status_code, response_content):
-        # 获取要校验的内容
-        validation_details = self.validation_map.get(url, {}).get(
-            str(status_code), {})
+        # 解析URL，去掉域名
+        path = url.split('://')[-1].split('/', 1)[-1]
+        segments = path.split('/')
+
+        max_attempts = 3
+        attempts = 0
+        validation_details = {}
+
+        # 循环尝试获取验证内容
+        while attempts < max_attempts and segments:
+            relative_url = '/' + '/'.join(segments)
+            validation_details = self.validation_map.get(relative_url, {}).get(
+                str(status_code), {})
+            if validation_details:
+                break
+            segments.pop(0)
+            attempts += 1
 
         if not validation_details:
             return False, "No validation rules found for this URL and status code"
@@ -50,5 +64,3 @@ class ResponseValidator:
                         return False, message
 
         return True, "Response is valid"
-
-

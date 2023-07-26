@@ -49,6 +49,7 @@ class SwaggerToCode():
         for tag, paths in class_dict.items():
             class_desc = tag
             class_name = ""
+            class_name_snake = ""
             class_url_list = []
             for path in paths:
                 url_dict = dict()
@@ -60,6 +61,7 @@ class SwaggerToCode():
                     parts = url.split("/")
                     if len(parts) >= 3:
                         class_name = parts[2].title() + parts[1].title()
+                        class_name_snake = camel_to_snake(class_name)
                     else:
                         raise Exception(
                             f"Error: Could not generate class name for {url}: ")
@@ -129,7 +131,6 @@ class SwaggerToCode():
             # 开始生成Python代码
             code = []
             code.append("import os")
-            code.append("import requests")
             code.append("from common.api.base_api import BaseAPI")
             code.append("from common.file_func import get_file_dir")
             code.append(f"class {class_name}(BaseAPI):")
@@ -151,10 +152,11 @@ class SwaggerToCode():
             smoke_code.append("import pytest as pytest")
             smoke_code.append("import allure")
             smoke_code.append(
-                f"from common.api.{self.dir_name}.{camel_to_snake(class_name)} import {class_name}")
+                f"from common.api.{self.dir_name}.{class_name_snake} import {class_name}")
             smoke_code_def = []
-            smoke_code_def.append(f"@pytest.title.{class_desc}")
+            smoke_code_def.append(f"@pytest.mark.{class_desc}")
             smoke_code_def.append(f"class Test{class_name}:")
+            smoke_code_def.append(f"    {class_name_snake} = {class_name}()")
             smoke_data = []
 
             # 方法定义
@@ -216,9 +218,10 @@ class SwaggerToCode():
                         else:
                             param_def_list.append(
                                 f"{camel_to_snake(param_name)}=None : {type_java_to_python(param_details.get('type'))}")
-
+                param_def_desc_list.append(
+                    "        :return: status_code, content")
                 smoke_code.append(
-                    f'from testcases.test_smoke.{self.dir_name}.test_{camel_to_snake(class_name)}_data import test_{func_name}_case_data')
+                    f'from testcases.test_smoke.{self.dir_name}.test_{class_name_snake}_data import test_{func_name}_case_data')
                 smoke_code_def.append(
                     f"    @allure.description(u'{func_desc}')")
                 smoke_code_def.append(f"    @allure.story(u'{func_desc}')")
@@ -227,12 +230,33 @@ class SwaggerToCode():
                     f"    @pytest.mark.parametrize('case_data', test_{func_name}_case_data)")
                 smoke_code_def.append(
                     f"    def test_{func_name}(self, case_data):")
+
                 smoke_code_def.append(
-                    f"        {class_name}().{func_name}(**case_data)")
+                    "        case_name = case_data.get('case_name')")
+                smoke_code_def.append(
+                    "        input_params = case_data.get('input_params')")
+                smoke_code_def.append(
+                    "        expect_status_code = case_data.get('expect_status_code')")
+                smoke_code_def.append(
+                    "        expect_content = case_data.get('expect_content')")
+                smoke_code_def.append(
+                    "        with allure.step(f'{case_name} step1:发起请求'):")
+                smoke_code_def.append(
+                    f"            status_code,content=self.{class_name_snake}.{func_name}(**input_params)")
+                smoke_code_def.append(
+                    "        with allure.step(f'{case_name} step2:检查状态码'):")
+                smoke_code_def.append(
+                    "            assert status_code == expect_status_code")
+                smoke_code_def.append(
+                    "        with allure.step(f'{case_name} step3:检查返回内容'):")
+                smoke_code_def.append(
+                    "            assert content == expect_content")
+
                 smoke_code_def.append("")
 
                 smoke_data.append(
-                    f"test_{func_name}_case_data = []")
+                    f"test_{func_name}_case_data = " +
+                    '[{"case_name": "","input_params":{},"expect_status_code": 200,"expect_content": {}}]')
                 smoke_data.append("")
 
                 code.append(
@@ -250,7 +274,7 @@ class SwaggerToCode():
                     code.append(f"        {param_input}")
                 code.append('        }')
                 code.append(
-                    f"        return requests.{method}(url, headers=self.headers, json=body)")
+                    f"        return self.{method}(url, headers=self.headers, json=body)")
                 code.append("")
 
             smoke_code += smoke_code_def
