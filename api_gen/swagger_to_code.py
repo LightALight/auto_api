@@ -11,12 +11,17 @@
 
 import json
 
+from common.file_func import get_file_name
 from common.str_func import camel_to_snake, type_java_to_python
 
 
 class SwaggerToCode():
 
     def __init__(self, swagger_json_path):
+        self.dir_name = camel_to_snake(
+            get_file_name(swagger_json_path).replace(
+                ".json", ""))
+        self.aip_check_file = self.dir_name + '.json'
         with open(swagger_json_path, 'r',
                   encoding='utf-8') as f:
             self.swagger_json = json.load(f)
@@ -125,10 +130,9 @@ class SwaggerToCode():
             code = []
             code.append("import os")
             code.append("import requests")
-            code.append(
-                "from common.api.response_validator import ResponseValidator")
+            code.append("from common.api.base_api import BaseAPI")
             code.append("from common.file_func import get_file_dir")
-            code.append(f"class {class_name}:")
+            code.append(f"class {class_name}(BaseAPI):")
             code.append(f'    """')
             code.append(f'    {class_desc}')
             code.append(f'    """')
@@ -138,17 +142,18 @@ class SwaggerToCode():
                 f"    BASE_URL = '{base_path}'  # TODO: Update with actual base URL")
             code.append(
                 f"    headers = dict()  # TODO: Update with actual headers URL")
+            code.append(f"    def __init__(self):")
             code.append(
-                f"    validator = ResponseValidator(os.path.join(get_file_dir(__file__), '{camel_to_snake(class_name)}.json'))")
+                f"        super().__init__(os.path.join(get_file_dir(__file__),'{self.aip_check_file}'))")
 
             # 开始生成冒烟代码
             smoke_code = []
             smoke_code.append("import pytest as pytest")
             smoke_code.append("import allure")
             smoke_code.append(
-                f"from common.api.CLASSNAME.{camel_to_snake(class_name)} import {class_name}")
+                f"from common.api.{self.dir_name}.{camel_to_snake(class_name)} import {class_name}")
             smoke_code_def = []
-            smoke_code_def.append(f"@pytest.mark.{class_desc}")
+            smoke_code_def.append(f"@pytest.title.{class_desc}")
             smoke_code_def.append(f"class Test{class_name}:")
             smoke_data = []
 
@@ -162,8 +167,8 @@ class SwaggerToCode():
 
                 func_name_list = path.split("/")
                 func_name_list.insert(0, method)
-                func_name = "_".join([camel_to_snake(func_name.replace("-", "_"))
-                                      for func_name in func_name_list if func_name])
+                func_name = "_".join([camel_to_snake(func_name.replace(
+                    "-", "_")) for func_name in func_name_list if func_name])
                 param_def_list = []
                 param_def_desc_list = []
                 param_input_list = []
@@ -212,11 +217,12 @@ class SwaggerToCode():
                             param_def_list.append(
                                 f"{camel_to_snake(param_name)}=None : {type_java_to_python(param_details.get('type'))}")
 
-                smoke_code.append(f'from testcases.test_smoke.CLASSNAME.test_{camel_to_snake(class_name)}_data import test_{func_name}_case_data')
-                smoke_code_def.append(f"    @allure.description(u'{func_desc}')")
+                smoke_code.append(
+                    f'from testcases.test_smoke.{self.dir_name}.test_{camel_to_snake(class_name)}_data import test_{func_name}_case_data')
+                smoke_code_def.append(
+                    f"    @allure.description(u'{func_desc}')")
                 smoke_code_def.append(f"    @allure.story(u'{func_desc}')")
                 smoke_code_def.append(f"    @allure.title(u'{func_desc}')")
-                smoke_code_def.append(f"    @pytest.mark.{func_desc}")
                 smoke_code_def.append(
                     f"    @pytest.mark.parametrize('case_data', test_{func_name}_case_data)")
                 smoke_code_def.append(
@@ -244,15 +250,7 @@ class SwaggerToCode():
                     code.append(f"        {param_input}")
                 code.append('        }')
                 code.append(
-                    f"        response = requests.{method}(url, headers=self.headers, json=body)")
-                code.append("        try:")
-                code.append(
-                    "            result, message = self.validator.validate_response(url, response.status_code, response.json())")
-                code.append("            assert result, message")
-                code.append("        except Exception as e:")
-                code.append("            print(e)")
-                code.append(
-                    "        return response.status_code, response.json()")
+                    f"        return requests.{method}(url, headers=self.headers, json=body)")
                 code.append("")
 
             smoke_code += smoke_code_def
